@@ -11,7 +11,7 @@ const razorpayInstance = new Razorpay({
 
 // Placing User Order From Frontend
 const placeOrder = async (req, res) => {
-    const frontend_url = "http://localhost:5174";
+    const frontend_url = "http://localhost:5173";
     try {
         console.log('Received order request:', {
             userId: req.userId,
