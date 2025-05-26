@@ -1,39 +1,41 @@
-import { createContext , useEffect, useState } from "react"
-import axios from "axios"
+import { createContext, useEffect, useState } from "react";
+import axios from "axios";
 
 export const StoreContext = createContext(null);
 
 const StoreContextProvider = (props) => {
-
     const [cartItems, setCartItems] = useState({});
+    
+    // ✅ Updated backend URL from localhost to Render
+    const url = "https://food-delivery-backend-bt52.onrender.com";
 
-    const url  = "http://localhost:8000"
+    const [token, setToken] = useState("");
+    const [food_list, setFoodList] = useState([]);
 
-    const [token,setToken] = useState("")
-
-
-    const [food_list,setFoodList] = useState([])
-    // add to cart:
     const addToCart = async (itemId) => {
         if (!cartItems[itemId]) {
-            setCartItems((prev) => ({ ...prev, [itemId]: 1 }))
-        }
-        else {
+            setCartItems((prev) => ({ ...prev, [itemId]: 1 }));
+        } else {
             setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
         }
-        if(token){
-            await axios.post(url+"/api/cart/add",{itemId},{ headers: { Authorization: `Bearer ${token}` } })
+
+        if (token) {
+            await axios.post(url + "/api/cart/add", { itemId }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
         }
-    }
+    };
 
     const removeFromCart = async (itemId) => {
         setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
-        if(token){
-            await axios.post(url+"/api/cart/remove",{itemId},{ headers: { Authorization: `Bearer ${token}` } })
-        }
-    }
 
-    // carttotal:
+        if (token) {
+            await axios.post(url + "/api/cart/remove", { itemId }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        }
+    };
+
     const getTotalCartAmount = () => {
         let totalAmount = 0;
         for (const item in cartItems) {
@@ -41,36 +43,33 @@ const StoreContextProvider = (props) => {
                 let itemInfo = food_list.find((product) => product._id === item);
                 totalAmount += itemInfo.price * cartItems[item];
             }
-
         }
         return totalAmount;
-    }
+    };
 
- const fetchFoodList = async () => {
-    const response = await axios.get(url+"/api/food/list");
-    setFoodList(response.data.data)
+    const fetchFoodList = async () => {
+        const response = await axios.get(url + "/api/food/list");
+        setFoodList(response.data.data);
+    };
 
- }
+    const loadCartData = async (token) => {
+        const response = await axios.post(url + "/api/cart/get", {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setCartItems(response.data.cartData);
+    };
 
-const loadCartData = async (token) => {
-    const response = await axios.post(url + "/api/cart/get", {}, {headers: { Authorization: `Bearer ${token}` }});
-    setCartItems(response.data.cartData);
-
-}
-    
-//   for still loged in
-    useEffect(()=>{
-
-        async function loadData(){
-            await fetchFoodList()
-           if(localStorage.getItem("token")){
-            setToken(localStorage.getItem("token"));
-            await loadCartData(localStorage.getItem("token"));
-        }
+    useEffect(() => {
+        async function loadData() {
+            await fetchFoodList();
+            const localToken = localStorage.getItem("token");
+            if (localToken) {
+                setToken(localToken);
+                await loadCartData(localToken);
+            }
         }
         loadData();
-    },[])
-
+    }, []);
 
     const contextValue = {
         food_list,
@@ -82,17 +81,13 @@ const loadCartData = async (token) => {
         url,
         token,
         setToken
-    }
-
-    // useEffect(()=>{
-    //     console.log(cartItems);
-    // },[cartItems])
+    };
 
     return (
         <StoreContext.Provider value={contextValue}>
             {props.children}
         </StoreContext.Provider>
-    )
-}
+    );
+};
 
 export default StoreContextProvider;
