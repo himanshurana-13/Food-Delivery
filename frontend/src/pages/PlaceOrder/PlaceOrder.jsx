@@ -107,7 +107,7 @@ const PlaceOrder = () => {
             const verificationResponse = await axios.post(`${url}/api/order/verify`, verificationData);
 
             if (verificationResponse.data.success) {
-              window.location.href = `http://localhost:5173/verify?success=true&orderId=${orderId}`;
+              navigate(`/verify?success=true&orderId=${orderId}`);
             } else {
               alert('Payment verification failed');
             }
